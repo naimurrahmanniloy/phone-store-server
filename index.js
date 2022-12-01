@@ -65,6 +65,16 @@ async function run() {
             res.send({ isAdmin: user?.role === 'admin' });
         });
 
+        //seller
+
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.role === 'seller' });
+        });
+
+
         //for user 
         app.get('/users', async (req, res) => {
             const query = {};
