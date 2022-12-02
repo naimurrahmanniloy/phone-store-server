@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jsonwebtoken = require('jsonwebtoken');
 require("dotenv").config()
 
@@ -59,6 +59,13 @@ async function run() {
             const phone = await allPhoneCollection.findOne(query);
             res.send(phone)
         })
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        })
+
         app.get('/category/:category', async (req, res) => {
             const id = req.params.category;
             const query = { category: id };
@@ -79,7 +86,30 @@ async function run() {
             const bookings = await bookingCollection.find(query).toArray()
             res.send(bookings)
         })
+        //bookings not then one
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking);
+            const query = {
+                deviceName: booking.deviceName,
+                price: booking.price,
+                name: booking.name,
+                email: booking.email,
+                location: booking.location,
+                phone: booking.phone
 
+            }
+
+            const alreadyBooked = await bookingCollection.find(query).toArray();
+
+            if (alreadyBooked.length) {
+                const message = `You already have a booking on ${booking.name}`
+                return res.send({ acknowledged: false, message })
+            }
+
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result)
+        })
         //admin 
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
