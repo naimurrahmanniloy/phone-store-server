@@ -3,8 +3,10 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const jsonwebtoken = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET);
 require("dotenv").config()
+
 
 
 //middle wares
@@ -79,6 +81,19 @@ async function run() {
             res.send(result);
         });
 
+        app.delete('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await bookingCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const booking = await bookingCollection.findOne(query)
+            res.send(booking)
+        })
 
         app.get('/bookings', async (req, res) => {
             const email = req.query.email;
@@ -107,9 +122,28 @@ async function run() {
                 return res.send({ acknowledged: false, message })
             }
 
-            const result = await bookingsCollection.insertOne(booking);
+            const result = await bookingCollection.insertOne(booking);
             res.send(result)
         })
+
+        //added for stripe
+        app.post('/create-payment-intent', async (req, res) => {
+            const booking = req.body;
+            const price = booking.price;
+            const amount = price * 100;
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
         //admin 
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
