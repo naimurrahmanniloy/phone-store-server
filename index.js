@@ -36,6 +36,12 @@ async function run() {
             const result = await phone.toArray();
             res.send(result)
         })
+        //sell post
+        app.post('/allPhones', async (req, res) => {
+            const allPhones = req.body;
+            const result = await allPhoneCollection.insertOne(allPhones);
+            res.send(result);
+        })
 
         app.get('/allPhones/:id', async (req, res) => {
             const id = req.params.category;
