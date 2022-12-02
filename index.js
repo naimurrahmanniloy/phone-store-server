@@ -32,6 +32,7 @@ async function run() {
         const usersCollection = client.db('phoneStore').collection('users');
         const allPhoneCollection = client.db('phoneStore').collection('allPhones');
         const bookingCollection = client.db('phoneStore').collection('bookings');
+        const paymentCollection = client.db('phoneStore').collection('payments');
 
 
         app.get('/category', async (req, res) => {
@@ -54,6 +55,7 @@ async function run() {
             res.send(result);
         })
 
+
         app.get('/allPhones/:id', async (req, res) => {
             const id = req.params.category;
             console.log(id)
@@ -61,6 +63,16 @@ async function run() {
             const phone = await allPhoneCollection.findOne(query);
             res.send(phone)
         })
+
+
+        app.get('/allPhones', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const posts = await allPhoneCollection.find(query).toArray();
+            res.send(posts)
+        })
+
+
         app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -126,23 +138,27 @@ async function run() {
             res.send(result)
         })
 
-        //added for stripe
-        app.post('/create-payment-intent', async (req, res) => {
-            const booking = req.body;
-            const price = booking.price;
-            const amount = price * 100;
 
-            const paymentIntent = await stripe.paymentIntents.create({
-                currency: 'usd',
-                amount: amount,
-                "payment_method_types": [
-                    "card"
-                ]
-            });
-            res.send({
-                clientSecret: paymentIntent.client_secret
-            })
-        })
+        //added for stripe
+
+
+
+        // app.post('/create-payment-intent', async (req, res) => {
+        //     const booking = req.body;
+        //     const price = booking.price;
+        //     const amount = price * 100;
+
+        //     const paymentIntent = await stripe.paymentIntents.create({
+        //         currency: 'usd',
+        //         amount: amount,
+        //         "payment_method_types": [
+        //             "card"
+        //         ]
+        //     });
+        //     res.send({
+        //         clientSecret: paymentIntent.client_secret,
+        //     });
+        // });
 
         //admin 
         app.get('/users/admin/:email', async (req, res) => {
